@@ -8,7 +8,7 @@ import java.io.File;
 import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class AppIntegrationTest {
+public class ChunkRSVPIntegrationTest {
 
     @TempDir
     Path tempDir;

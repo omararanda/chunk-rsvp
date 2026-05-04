@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class App {
+public class ChunkRSVP {
     public static void main(String[] args) {
         Integer wpm = null;
         Double sm = null, pm = null;

@@ -49,7 +49,7 @@
           <configuration>
               <archive>
                   <manifest>
-                      <mainClass>com.chunkrsvp.App</mainClass>
+                      <mainClass>com.chunkrsvp.cli.ChunkRSVP</mainClass>
                   </manifest>
               </archive>
           </configuration>
