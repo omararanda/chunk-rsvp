@@ -51,26 +51,58 @@ public class RSVPEngineInteractiveTest {
     }
 
     @Test
-    void testRunLoop_DisplayArtifacts() {
-        // Verify that the display logic does not contain unexpected shell artifacts or extra characters
+    void testPlayPauseTogglesStateAndUI() throws Exception {
         RSVPEngine engine = new RSVPEngine(300, 0.0, 0.0, 0, 0, configService);
+        List<Chunk> chunks = List.of(new Chunk("test"));
+
+        // Simulate Spacebar (32) and then Ctrl+C (3)
+        byte[] input = {32, 3}; 
+        InputStream is = new ByteArrayInputStream(input);
         
-        // We capture output to verify the header formatting
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(out);
         PrintStream originalOut = System.out;
         System.setOut(ps);
         
         try {
-            // Force header update to capture current output
-            // We use displayChunk as a proxy to check UI integrity
-            // Note: In a professional refactor, we would inject a PrintStream, 
-            // but for now, we verify output string contains only expected ANSI/text.
-            // Using a simple check here.
-            assertTrue(true); 
+            engine.run(chunks, is);
+            String output = out.toString();
+            assertTrue(output.contains("[PAUSED]"), "Output should contain [PAUSED] indicator");
         } finally {
             System.setOut(originalOut);
         }
     }
-}
 
+    @Test
+    void testPlayPauseResumesCorrectly() throws Exception {
+        RSVPEngine engine = new RSVPEngine(300, 0.0, 0.0, 0, 0, configService);
+        List<Chunk> chunks = List.of(new Chunk("test"));
+
+        // Space (32), Space (32), Ctrl+C (3)
+        byte[] input = {32, 32, 3}; 
+        InputStream is = new ByteArrayInputStream(input);
+        
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(out);
+        PrintStream originalOut = System.out;
+        System.setOut(ps);
+        
+        try {
+            engine.run(chunks, is);
+            String output = out.toString();
+            // Should show [PAUSED] and then revert to regular speed string
+            assertTrue(output.contains("[PAUSED]"));
+            assertTrue(output.contains("Speed: 300 WPM"));
+        } finally {
+            System.setOut(originalOut);
+        }
+    }
+
+    @Test
+    void testEngineHaltsProgressionWhenPaused() throws Exception {
+        // Mocking complexity here is high, but we can verify that if we send Spacebar
+        // the engine does not move to the next chunk in the time it should have.
+        // This is a placeholder that will fail until the logic is implemented.
+        assertTrue(false, "Test not yet implemented - this will fail as expected.");
+    }
+}
