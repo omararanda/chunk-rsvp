@@ -8,3 +8,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Initial project structure for chunk-learn RSVP CLI.
+- Play/Pause mechanism (Spacebar) during RSVP playback.
