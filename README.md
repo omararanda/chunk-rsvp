@@ -49,4 +49,4 @@ When both configuration methods are used:
 Pull requests are welcome. For major changes, please open an issue first to discuss the proposed updates.
 
 ## License
-[Insert License Here]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
