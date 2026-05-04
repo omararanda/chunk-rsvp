@@ -1,4 +1,4 @@
-package com.rsvp.model;
+package com.chunkrsvp.model;
 
 /**
  * Teacher's Notes:

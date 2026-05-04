@@ -1,7 +1,7 @@
-package com.rsvp;
+package com.chunkrsvp;
 
-import com.rsvp.engine.RSVPEngine;
-import com.rsvp.util.ConfigService;
+import com.chunkrsvp.engine.RSVPEngine;
+import com.chunkrsvp.util.ConfigService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import java.io.File;
