@@ -110,10 +110,14 @@ public class RSVPEngine {
     private void displayHeader(boolean force) {
         if (baseWpm != lastDisplayedWpm || force) {
             System.out.print("\033[H");
-            System.out.print("\033[1G\033[KControls: [↑] +50 WPM | [↓] -50 WPM | [←] Back 5 chunks\n");
+            System.out.print("\033[1G\033[KControls: [↑] +50 WPM | [↓] -50 WPM | [←] Back 5 chunks | [SPACE] Pause/Resume\n");
             System.out.print("\033[1G\033[K\n");
             System.out.print("\033[1G\033[K");
-            System.out.printf("Speed: %d WPM", baseWpm);
+            if (isPaused) {
+                System.out.printf("Speed: [PAUSED] %d WPM", baseWpm);
+            } else {
+                System.out.printf("Speed: %d WPM", baseWpm);
+            }
             System.out.print("\033[K\n"); 
             lastDisplayedWpm = baseWpm;
         }
