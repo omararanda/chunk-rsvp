@@ -61,6 +61,8 @@ public class RSVPEngine {
         return totalDelay;
     }
 
+    private boolean isPaused = false;
+
     public void run(List<Chunk> chunks, InputStream ttyInput) {
         setupTerminal();
         try {
@@ -69,17 +71,30 @@ public class RSVPEngine {
             while (i < chunks.size()) {
                 Chunk chunk = chunks.get(i);
                 long delay = calculateDelay(chunk);
-                long startTime = System.currentTimeMillis();
+                long remainingDelay = delay;
+                long lastLoopTime = System.currentTimeMillis();
                 boolean jumped = false;
-                while (System.currentTimeMillis() - startTime < delay) {
+
+                while (remainingDelay > 0 || isPaused) {
+                    long currentTime = System.currentTimeMillis();
+                    long elapsed = currentTime - lastLoopTime;
+                    lastLoopTime = currentTime;
+
+                    if (!isPaused) {
+                        remainingDelay -= elapsed;
+                    }
+
                     if (ttyInput.available() > 0) {
                         int b = ttyInput.read();
-                        if (b == 27) {
+                        if (b == 32) { // Space
+                            isPaused = !isPaused;
+                            displayChunk(chunk, true);
+                        } else if (b == 27) {
                             Thread.sleep(5);
                             if (ttyInput.available() > 0 && ttyInput.read() == '[') {
                                 int dir = ttyInput.read();
-                                if (dir == 'A') { baseWpm += 50; saveConfig(); delay = calculateDelay(chunk); startTime = System.currentTimeMillis(); displayChunk(chunk, true); }
-                                else if (dir == 'B') { baseWpm = Math.max(50, baseWpm - 50); saveConfig(); delay = calculateDelay(chunk); startTime = System.currentTimeMillis(); displayChunk(chunk, true); }
+                                if (dir == 'A') { baseWpm += 50; saveConfig(); delay = calculateDelay(chunk); remainingDelay = delay; lastLoopTime = System.currentTimeMillis(); displayChunk(chunk, true); }
+                                else if (dir == 'B') { baseWpm = Math.max(50, baseWpm - 50); saveConfig(); delay = calculateDelay(chunk); remainingDelay = delay; lastLoopTime = System.currentTimeMillis(); displayChunk(chunk, true); }
                                 else if (dir == 'D') { i = Math.max(0, i - 5); jumped = true; displayChunk(chunks.get(i), true); break; }
                             }
                         } else if (b == 3) { restoreTerminal(); return; }
