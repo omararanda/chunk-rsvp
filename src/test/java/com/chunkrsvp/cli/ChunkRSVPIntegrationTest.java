@@ -1,4 +1,4 @@
-package com.chunkrsvp;
+package com.chunkrsvp.cli;
 
 import com.chunkrsvp.engine.RSVPEngine;
 import com.chunkrsvp.util.ConfigService;
