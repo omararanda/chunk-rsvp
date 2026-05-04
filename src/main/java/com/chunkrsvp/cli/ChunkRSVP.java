@@ -1,4 +1,4 @@
-package com.chunkrsvp;
+package com.chunkrsvp.cli;
 
 import com.chunkrsvp.engine.RSVPEngine;
 import com.chunkrsvp.model.Chunk;
@@ -11,28 +11,17 @@ import java.util.stream.Collectors;
 
 public class ChunkRSVP {
     public static void main(String[] args) {
-        Integer wpm = null;
-        Double sm = null, pm = null;
-        Integer sd = null, pd = null;
-        for (String arg : args) {
-            if (arg.equals("-h") || arg.equals("--help")) { printHelp(); return; }
-            else if (arg.equals("--init")) { initializeConfig(); return; }
-            else if (arg.startsWith("-wpm=") || arg.startsWith("--words-per-minute=")) { int val = Integer.parseInt(arg.split("=")[1]); if (val > 0) wpm = val; }
-            else if (arg.startsWith("-sm=") || arg.startsWith("--stop-multiplier=")) { sm = Double.parseDouble(arg.split("=")[1]); }
-            else if (arg.startsWith("-pm=") || arg.startsWith("--pause-multiplier=")) { pm = Double.parseDouble(arg.split("=")[1]); }
-            else if (arg.startsWith("-sd=") || arg.startsWith("--stop-delay=")) { sd = Integer.parseInt(arg.split("=")[1]); }
-            else if (arg.startsWith("-pd=") || arg.startsWith("--pause-delay=")) { pd = Integer.parseInt(arg.split("=")[1]); }
-        }
-        List<Chunk> chunks;
-        try {
-            if (System.in.available() > 0) chunks = loadChunksFromStream(System.in);
-            else chunks = loadChunksFromStream(App.class.getClassLoader().getResourceAsStream("mock_chunks.txt"));
-        } catch (Exception e) { System.err.println("Error reading input: " + e.getMessage()); return; }
-        if (chunks == null || chunks.isEmpty()) { System.err.println("No chunks found."); return; }
+        CliArguments cli = CliParser.parse(args);
+        if (cli.isHelp()) { printHelp(); return; }
+        if (cli.isInit()) { initializeConfig(); return; }
+
+        List<Chunk> chunks = ChunkLoader.load(System.in);
+        if (chunks.isEmpty()) { System.err.println("No chunks found."); return; }
         
         ConfigService cs = new ConfigService(System.getProperty("user.home") + "/.config/chunk-rsvp/config.properties");
-        RSVPEngine engine = new RSVPEngine(wpm != null ? wpm : 300, sm, pm, sd, pd, cs);
-        try (java.io.FileInputStream tty = new java.io.FileInputStream("/dev/tty")) {
+        RSVPEngine engine = new RSVPEngine(cli.getWpm() != null ? cli.getWpm() : 300, cli.getSm(), cli.getPm(), cli.getSd(), cli.getPd(), cs);
+        
+        try (FileInputStream tty = new FileInputStream("/dev/tty")) {
             engine.run(chunks, tty);
         } catch (Exception e) {
             System.err.println("Error reading tty: " + e.getMessage());
@@ -65,12 +54,5 @@ public class ChunkRSVP {
         File configFile = new File(dir, "config.properties");
         if (dir.exists() && configFile.exists()) { System.err.println("Config already exists."); return; }
         try { dir.mkdirs(); try (PrintWriter out = new PrintWriter(configFile)) { out.println("wpm=300\ndelay.stop=50\ndelay.pause=20"); } System.out.println("Initialized: " + configFile.getAbsolutePath()); } catch (Exception e) { System.err.println("Error: " + e.getMessage()); }
-    }
-
-    private static List<Chunk> loadChunksFromStream(InputStream is) {
-        if (is == null) return new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
-            return reader.lines().filter(line -> !line.isBlank()).map(Chunk::new).collect(Collectors.toList());
-        } catch (Exception e) { return new ArrayList<>(); }
     }
 }
