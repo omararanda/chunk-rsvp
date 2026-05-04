@@ -2,10 +2,10 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.chunkrsvp</groupId>
-  <artifactId>chunk-learn</artifactId>
+  <artifactId>chunk-rsvp</artifactId>
   <packaging>jar</packaging>
   <version>1.0-SNAPSHOT</version>
-  <name>chunk-learn</name>
+  <name>chunk-rsvp</name>
 
   <properties>
     <maven.compiler.release>17</maven.compiler.release>
