@@ -8,6 +8,7 @@ public class MockViewManager implements ViewManager {
     public int displayCalls = 0;
     public int lastWpm;
     public boolean lastPaused;
+    public boolean lastShowControls;
 
     @Override
     public void setup() { setupCalls++; }
@@ -20,5 +21,6 @@ public class MockViewManager implements ViewManager {
         displayCalls++;
         lastWpm = wpm;
         lastPaused = isPaused;
+        lastShowControls = showControls;
     }
 }

@@ -8,7 +8,7 @@ import com.chunkrsvp.util.ConfigurationManager;
 import com.chunkrsvp.util.DefaultConfigProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import java.io.File;
 
 public class RSVPEngineTest {
@@ -97,5 +97,26 @@ public class RSVPEngineTest {
         engine.run(provider, ic);
         
         assertEquals(300, cm.getConfig().wpm(), "WPM should NOT have changed in no-controls mode");
+    }
+
+    @Test
+    void testShowControlsPassedCorrectlyToView() throws Exception {
+        // Test 1: noControls = true -> showControls should be false
+        ConfigurationManager cmNo = new ConfigurationManager(configService, 
+            new CliArguments(300, null, null, null, null, false, false, null, true), 
+            new DefaultConfigProvider());
+        RSVPEngine engineNo = new RSVPEngine(cmNo, mockView);
+        engineNo.run(new com.chunkrsvp.model.ListChunkProvider(java.util.List.of(new Chunk("t"))), 
+                     new com.chunkrsvp.cli.input.InputController(new java.io.ByteArrayInputStream(new byte[]{3})));
+        assertFalse(mockView.lastShowControls, "View should receive showControls=false when noControls=true");
+
+        // Test 2: noControls = false -> showControls should be true
+        ConfigurationManager cmShow = new ConfigurationManager(configService, 
+            new CliArguments(300, null, null, null, null, false, false, null, false), 
+            new DefaultConfigProvider());
+        RSVPEngine engineShow = new RSVPEngine(cmShow, mockView);
+        engineShow.run(new com.chunkrsvp.model.ListChunkProvider(java.util.List.of(new Chunk("t"))), 
+                       new com.chunkrsvp.cli.input.InputController(new java.io.ByteArrayInputStream(new byte[]{3})));
+        assertTrue(mockView.lastShowControls, "View should receive showControls=true when noControls=false");
     }
 }

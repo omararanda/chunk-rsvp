@@ -33,6 +33,7 @@ echo "This is a speed reading test." | java -jar target/chunk-learn-1.0-SNAPSHOT
 | `-wpm, --words-per-minute=WPM` | Set base words per minute (Default: 300) |
 | `-sd, --stop-delay=MS` | Set additive stop punctuation delay in ms (Default: 30) |
 | `-pd, --pause-delay=MS` | Set additive pause punctuation delay in ms (Default: 10) |
+| `--no-controls` | Disable UI control hints and interactive inputs |
 | `-sm, --stop-multiplier=PERCENT` | Set stop punctuation increase (percentage of chunk time) |
 | `-pm, --pause-multiplier=PERCENT` | Set pause punctuation increase (percentage of chunk time) |
 

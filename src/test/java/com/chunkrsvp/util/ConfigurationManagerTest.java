@@ -169,6 +169,15 @@ public class ConfigurationManagerTest {
     }
 
     @Test
+    void testNoControlsConfigDefaultIsFalse() {
+        ConfigService cs = new ConfigService(tempDir.resolve("config.properties").toString());
+        CliArguments cli = new CliArguments(null, null, null, null, null, false, false, null);
+        ConfigurationManager cm = new ConfigurationManager(cs, cli, new DefaultConfigProvider());
+        
+        assertFalse(cm.getConfig().noControls(), "noControls should be false by default in RsvpConfig");
+    }
+
+    @Test
     void testUpdateConfigIsDebounced() throws Exception {
         MockConfigService mcs = new MockConfigService(true);
         ConfigurationManager cm = new ConfigurationManager(mcs, new CliArguments(null, null, null, null, null, false, false, null), new DefaultConfigProvider());
