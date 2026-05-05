@@ -14,3 +14,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactored project to `com.chunkrsvp` package structure.
 - Standardized project artifact and entry point names to `ChunkRSVP`.
 - Improved test/production code alignment.
+- Decoupled configuration management into a unified `ConfigurationManager` service [RSVP-010].
