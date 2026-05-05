@@ -1,10 +1,11 @@
 package com.chunkrsvp.engine;
 
+import com.chunkrsvp.cli.input.InputAction;
+import com.chunkrsvp.cli.input.InputController;
 import com.chunkrsvp.model.Chunk;
 import com.chunkrsvp.cli.ui.ViewManager;
 import com.chunkrsvp.util.ConfigurationManager;
 import com.chunkrsvp.util.RsvpConfig;
-import java.io.*;
 import java.util.List;
 
 public class RSVPEngine {
@@ -33,7 +34,7 @@ public class RSVPEngine {
 
     private boolean isPaused = false;
 
-    public void run(List<Chunk> chunks, InputStream ttyInput) {
+    public void run(List<Chunk> chunks, InputController input) {
         view.setup();
         try {
             int i = 0;
@@ -54,28 +55,22 @@ public class RSVPEngine {
                         remainingDelay -= elapsed;
                     }
 
-                    if (ttyInput.available() > 0) {
-                        int b = ttyInput.read();
-                        if (b == 32) { // Space
-                            isPaused = !isPaused;
-                            view.display(chunk, configManager.getConfig().wpm(), isPaused, true);
-                        } else if (b == 27) {
-                            Thread.sleep(5);
-                            if (ttyInput.available() > 0 && ttyInput.read() == '[') {
-                                int dir = ttyInput.read();
-                                if (dir == 'A') { 
-                                    RsvpConfig c = configManager.getConfig();
-                                    configManager.updateConfig(new RsvpConfig(c.wpm() + 50, c.stopPerc(), c.pausePerc(), c.stopDelayMs(), c.pauseDelayMs()));
-                                    delay = calculateDelay(chunk); remainingDelay = delay; lastLoopTime = System.currentTimeMillis(); view.display(chunk, configManager.getConfig().wpm(), isPaused, true); 
-                                }
-                                else if (dir == 'B') { 
-                                    RsvpConfig c = configManager.getConfig();
-                                    configManager.updateConfig(new RsvpConfig(Math.max(50, c.wpm() - 50), c.stopPerc(), c.pausePerc(), c.stopDelayMs(), c.pauseDelayMs()));
-                                    delay = calculateDelay(chunk); remainingDelay = delay; lastLoopTime = System.currentTimeMillis(); view.display(chunk, configManager.getConfig().wpm(), isPaused, true); 
-                                }
-                                else if (dir == 'D') { i = Math.max(0, i - 5); jumped = true; view.display(chunks.get(i), configManager.getConfig().wpm(), isPaused, true); break; }
-                            }
-                        } else if (b == 3) { view.restore(); return; }
+                    InputAction action = input.checkInput();
+                    if (action == InputAction.PAUSE_TOGGLE) {
+                        isPaused = !isPaused;
+                        view.display(chunk, configManager.getConfig().wpm(), isPaused, true);
+                    } else if (action == InputAction.SPEED_UP) {
+                        RsvpConfig c = configManager.getConfig();
+                        configManager.updateConfig(new RsvpConfig(c.wpm() + 50, c.stopPerc(), c.pausePerc(), c.stopDelayMs(), c.pauseDelayMs()));
+                        delay = calculateDelay(chunk); remainingDelay = delay; lastLoopTime = System.currentTimeMillis(); view.display(chunk, configManager.getConfig().wpm(), isPaused, true); 
+                    } else if (action == InputAction.SPEED_DOWN) {
+                        RsvpConfig c = configManager.getConfig();
+                        configManager.updateConfig(new RsvpConfig(Math.max(50, c.wpm() - 50), c.stopPerc(), c.pausePerc(), c.stopDelayMs(), c.pauseDelayMs()));
+                        delay = calculateDelay(chunk); remainingDelay = delay; lastLoopTime = System.currentTimeMillis(); view.display(chunk, configManager.getConfig().wpm(), isPaused, true); 
+                    } else if (action == InputAction.REWIND) {
+                        i = Math.max(0, i - 5); jumped = true; view.display(chunks.get(i), configManager.getConfig().wpm(), isPaused, true); break;
+                    } else if (action == InputAction.EXIT) {
+                        view.restore(); return;
                     }
                     Thread.sleep(10);
                 }

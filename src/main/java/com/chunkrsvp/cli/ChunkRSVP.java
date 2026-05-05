@@ -25,10 +25,11 @@ public class ChunkRSVP {
         RSVPEngine engine = new RSVPEngine(configManager, new com.chunkrsvp.cli.ui.AnsiTerminalView());
 
         try (FileInputStream tty = new FileInputStream("/dev/tty")) {
-            engine.run(chunks, tty);
+            engine.run(chunks, new com.chunkrsvp.cli.input.InputController(tty));
         } catch (Exception e) {
             System.err.println("Error reading tty: " + e.getMessage());
         }
+
         System.out.println("Reading complete.");
     }
 

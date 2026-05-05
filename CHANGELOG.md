@@ -16,3 +16,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved test/production code alignment.
 - Decoupled configuration management into a unified `ConfigurationManager` service [RSVP-010].
 - Extracted UI/Terminal management into `ViewManager` and `AnsiTerminalView` [RSVP-011].
+- Decoupled interactive input handling into `InputController` and `InputAction` [RSVP-012].
