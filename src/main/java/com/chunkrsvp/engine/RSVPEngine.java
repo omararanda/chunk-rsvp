@@ -61,11 +61,13 @@ public class RSVPEngine {
                             if (ttyInput.available() > 0 && ttyInput.read() == '[') {
                                 int dir = ttyInput.read();
                                 if (dir == 'A') { 
-                                    configManager.updateWpm(configManager.getConfig().wpm() + 50);
+                                    RsvpConfig c = configManager.getConfig();
+                                    configManager.updateConfig(new RsvpConfig(c.wpm() + 50, c.stopPerc(), c.pausePerc(), c.stopDelayMs(), c.pauseDelayMs()));
                                     delay = calculateDelay(chunk); remainingDelay = delay; lastLoopTime = System.currentTimeMillis(); displayChunk(chunk, true); 
                                 }
                                 else if (dir == 'B') { 
-                                    configManager.updateWpm(Math.max(50, configManager.getConfig().wpm() - 50));
+                                    RsvpConfig c = configManager.getConfig();
+                                    configManager.updateConfig(new RsvpConfig(Math.max(50, c.wpm() - 50), c.stopPerc(), c.pausePerc(), c.stopDelayMs(), c.pauseDelayMs()));
                                     delay = calculateDelay(chunk); remainingDelay = delay; lastLoopTime = System.currentTimeMillis(); displayChunk(chunk, true); 
                                 }
                                 else if (dir == 'D') { i = Math.max(0, i - 5); jumped = true; displayChunk(chunks.get(i), true); break; }
