@@ -20,8 +20,8 @@ public class InputController {
                 // This is a blocking read, but we checked available() >= 2 for the sequence
                 // to be considered a full command.
                 // Wait... if available() is 1 (the ESC), we should wait for the rest.
-                long startTime = System.currentTimeMillis();
-                while (inputStream.available() < 2 && (System.currentTimeMillis() - startTime) < 50) {
+                long startTime = System.nanoTime();
+                while (inputStream.available() < 2 && (System.nanoTime() - startTime) < 50_000_000L) { // 50ms in nanoseconds
                     Thread.sleep(5);
                 }
                 

@@ -19,3 +19,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Decoupled interactive input handling into `InputController` and `InputAction` [RSVP-012].
 - Implemented flexible input source handling: prioritizes file path over piped input [RSVP-004].
 - Transitioned engine to a streaming architecture with bounded history to enable `O(1)` memory footprint during large file reads [RSVP-008].
+- Mitigated timing jitter by transitioning to `System.nanoTime()` and implementing a hybrid sleep/spin-wait strategy for microsecond-level pacing precision [RSVP-006].
+- Migrated configuration persistence to an asynchronous, debounced model using a background executor to prevent I/O blocking during interactive adjustments [RSVP-006].

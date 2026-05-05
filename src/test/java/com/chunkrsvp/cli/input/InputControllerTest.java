@@ -38,4 +38,15 @@ public class InputControllerTest {
         InputController ic = new InputController(new ByteArrayInputStream(new byte[]{3}));
         assertEquals(InputAction.EXIT, ic.checkInput());
     }
+
+    @Test
+    void testEscapeSequenceTimeout() throws Exception {
+        // Provide just an ESC character without the rest of the sequence
+        // The controller should time out and return NONE instead of blocking forever
+        InputController ic = new InputController(new ByteArrayInputStream(new byte[]{27}));
+        long start = System.nanoTime();
+        assertEquals(InputAction.NONE, ic.checkInput());
+        long elapsedMillis = (System.nanoTime() - start) / 1_000_000;
+        assertTrue(elapsedMillis >= 50 && elapsedMillis < 150, "Should have timed out after ~50ms, took: " + elapsedMillis + "ms");
+    }
 }
