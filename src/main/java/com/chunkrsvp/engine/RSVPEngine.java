@@ -34,13 +34,16 @@ public class RSVPEngine {
 
     private boolean isPaused = false;
 
-    public void run(List<Chunk> chunks, InputController input) {
+    public void run(com.chunkrsvp.model.ChunkProvider provider, InputController input) {
         view.setup();
         try {
-            int i = 0;
-            view.display(chunks.get(0), configManager.getConfig().wpm(), isPaused, true);
-            while (i < chunks.size()) {
-                Chunk chunk = chunks.get(i);
+            if (!provider.hasNext()) return;
+            provider.next();
+            view.display(provider.current(), configManager.getConfig().wpm(), isPaused, true);
+            
+            boolean running = true;
+            while (running) {
+                Chunk chunk = provider.current();
                 long delay = calculateDelay(chunk);
                 long remainingDelay = delay;
                 long lastLoopTime = System.currentTimeMillis();
@@ -68,13 +71,20 @@ public class RSVPEngine {
                         configManager.updateConfig(new RsvpConfig(Math.max(50, c.wpm() - 50), c.stopPerc(), c.pausePerc(), c.stopDelayMs(), c.pauseDelayMs()));
                         delay = calculateDelay(chunk); remainingDelay = delay; lastLoopTime = System.currentTimeMillis(); view.display(chunk, configManager.getConfig().wpm(), isPaused, true); 
                     } else if (action == InputAction.REWIND) {
-                        i = Math.max(0, i - 5); jumped = true; view.display(chunks.get(i), configManager.getConfig().wpm(), isPaused, true); break;
+                        provider.rewind(5); jumped = true; view.display(provider.current(), configManager.getConfig().wpm(), isPaused, true); break;
                     } else if (action == InputAction.EXIT) {
                         view.restore(); return;
                     }
                     Thread.sleep(10);
                 }
-                if (!jumped) { i++; if (i < chunks.size()) view.display(chunks.get(i), configManager.getConfig().wpm(), isPaused, false); }
+                if (!jumped) {
+                    if (provider.hasNext()) {
+                        provider.next();
+                        view.display(provider.current(), configManager.getConfig().wpm(), isPaused, false);
+                    } else {
+                        running = false;
+                    }
+                }
             }
         } catch (Exception e) { System.err.println("Error: " + e.getMessage()); Thread.currentThread().interrupt(); } finally { view.restore(); }
     }
