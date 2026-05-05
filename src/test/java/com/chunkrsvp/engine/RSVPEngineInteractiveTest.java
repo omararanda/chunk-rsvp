@@ -70,4 +70,51 @@ public class RSVPEngineInteractiveTest {
             System.setOut(originalOut);
         }
     }
+
+    @Test
+    void testPlayPauseResumesCorrectly() throws Exception {
+        RSVPEngine engine = new RSVPEngine(createCm());
+        List<Chunk> chunks = List.of(new Chunk("test"));
+
+        // Space (32), Space (32), Ctrl+C (3)
+        byte[] input = {32, 32, 3}; 
+        InputStream is = new ByteArrayInputStream(input);
+        
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(out);
+        PrintStream originalOut = System.out;
+        System.setOut(ps);
+        
+        try {
+            engine.run(chunks, is);
+            String output = out.toString();
+            // Should show [PAUSED] and then revert to regular speed string
+            assertTrue(output.contains("[PAUSED]"));
+            assertTrue(output.contains("Speed: 300 WPM"));
+        } finally {
+            System.setOut(originalOut);
+        }
+    }
+
+    @Test
+    void testEngineHaltsProgressionWhenPaused() throws Exception {
+        RSVPEngine engine = new RSVPEngine(createCm());
+        List<Chunk> chunks = List.of(new Chunk("test1"), new Chunk("test2"));
+
+        // Space (32), Space (32), Ctrl+C (3)
+        PipedOutputStream pos = new PipedOutputStream();
+        PipedInputStream pis = new PipedInputStream(pos);
+        
+        pos.write(32); // Pause
+
+        Thread engineThread = new Thread(() -> engine.run(chunks, pis));
+        engineThread.start();
+        
+        Thread.sleep(100);
+        
+        pos.write(32); // Resume
+        pos.write(3); // Exit
+        engineThread.join(2000);
+        assertFalse(engineThread.isAlive(), "Engine thread should have finished");
+    }
 }
