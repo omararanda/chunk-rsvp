@@ -44,13 +44,13 @@ public class RSVPEngine {
             boolean running = true;
             while (running) {
                 Chunk chunk = provider.current();
-                long delay = calculateDelay(chunk);
-                long remainingDelay = delay;
-                long lastLoopTime = System.currentTimeMillis();
+                long delayNanos = calculateDelay(chunk) * 1_000_000L;
+                long remainingDelay = delayNanos;
+                long lastLoopTime = System.nanoTime();
                 boolean jumped = false;
 
                 while (remainingDelay > 0 || isPaused) {
-                    long currentTime = System.currentTimeMillis();
+                    long currentTime = System.nanoTime();
                     long elapsed = currentTime - lastLoopTime;
                     lastLoopTime = currentTime;
 
@@ -65,17 +65,26 @@ public class RSVPEngine {
                     } else if (action == InputAction.SPEED_UP) {
                         RsvpConfig c = configManager.getConfig();
                         configManager.updateConfig(new RsvpConfig(c.wpm() + 50, c.stopPerc(), c.pausePerc(), c.stopDelayMs(), c.pauseDelayMs()));
-                        delay = calculateDelay(chunk); remainingDelay = delay; lastLoopTime = System.currentTimeMillis(); view.display(chunk, configManager.getConfig().wpm(), isPaused, true); 
+                        delayNanos = calculateDelay(chunk) * 1_000_000L; remainingDelay = delayNanos; lastLoopTime = System.nanoTime(); view.display(chunk, configManager.getConfig().wpm(), isPaused, true); 
                     } else if (action == InputAction.SPEED_DOWN) {
                         RsvpConfig c = configManager.getConfig();
                         configManager.updateConfig(new RsvpConfig(Math.max(50, c.wpm() - 50), c.stopPerc(), c.pausePerc(), c.stopDelayMs(), c.pauseDelayMs()));
-                        delay = calculateDelay(chunk); remainingDelay = delay; lastLoopTime = System.currentTimeMillis(); view.display(chunk, configManager.getConfig().wpm(), isPaused, true); 
+                        delayNanos = calculateDelay(chunk) * 1_000_000L; remainingDelay = delayNanos; lastLoopTime = System.nanoTime(); view.display(chunk, configManager.getConfig().wpm(), isPaused, true); 
                     } else if (action == InputAction.REWIND) {
                         provider.rewind(5); jumped = true; view.display(provider.current(), configManager.getConfig().wpm(), isPaused, true); break;
                     } else if (action == InputAction.EXIT) {
                         view.restore(); return;
                     }
-                    Thread.sleep(10);
+
+                    if (!isPaused && remainingDelay > 0) {
+                        if (remainingDelay > 20_000_000L) { // > 20ms
+                            Thread.sleep(1);
+                        } else {
+                            Thread.onSpinWait();
+                        }
+                    } else if (isPaused) {
+                        Thread.sleep(10);
+                    }
                 }
                 if (!jumped) {
                     if (provider.hasNext()) {

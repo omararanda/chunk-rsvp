@@ -4,6 +4,10 @@ import com.chunkrsvp.cli.CliArguments;
 import java.util.Properties;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class ConfigurationManager {
     private final ConfigService configService;
@@ -11,6 +15,8 @@ public class ConfigurationManager {
     private final CliArguments cliArgs;
     private RsvpConfig config;
     private final Set<String> transientKeys = new HashSet<>();
+    private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    private ScheduledFuture<?> pendingSave;
 
     public ConfigurationManager(ConfigService configService, CliArguments cliArgs, DefaultConfigProvider defaults) {
         this.configService = configService;
@@ -48,10 +54,17 @@ public class ConfigurationManager {
 
     public void updateConfig(RsvpConfig newConfig) {
         this.config = newConfig;
-        persist();
+        schedulePersist();
     }
 
-    public void persist() {
+    private synchronized void schedulePersist() {
+        if (pendingSave != null && !pendingSave.isDone()) {
+            pendingSave.cancel(false);
+        }
+        pendingSave = executor.schedule(this::persist, 500, TimeUnit.MILLISECONDS);
+    }
+
+    public synchronized void persist() {
         if (!configService.exists()) return;
 
         Properties props = configService.load();
@@ -76,6 +89,24 @@ public class ConfigurationManager {
             }
         }
         return false;
+    }
+
+    public void shutdown() {
+        synchronized (this) {
+            if (pendingSave != null && !pendingSave.isDone()) {
+                pendingSave.cancel(false);
+                persist();
+            }
+        }
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(2, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 
     public boolean isHelp() { return cliArgs.isHelp(); }

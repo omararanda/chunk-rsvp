@@ -45,6 +45,7 @@ public class ConfigurationManagerTest {
 
         RsvpConfig cfg = cm.getConfig();
         cm.updateConfig(new RsvpConfig(500, cfg.stopPerc(), cfg.pausePerc(), cfg.stopDelayMs(), cfg.pauseDelayMs()));
+        cm.shutdown();
         
         java.util.Properties reloaded = cs.load();
         assertEquals("500", reloaded.getProperty("wpm"));
@@ -61,6 +62,7 @@ public class ConfigurationManagerTest {
         
         ConfigurationManager cm = createCmEmptyCli(cs);
         cm.updateConfig(new RsvpConfig(500, 2.0, 1.5, 30, 10));
+        cm.shutdown();
 
         java.util.Properties reloaded = cs.load();
         assertEquals("500", reloaded.getProperty("wpm"));
@@ -80,6 +82,7 @@ public class ConfigurationManagerTest {
         
         ConfigurationManager cm = createCmEmptyCli(cs);
         cm.updateConfig(new RsvpConfig(300, 0.0, 0.0, 60, 30));
+        cm.shutdown();
 
         java.util.Properties reloaded = cs.load();
         assertEquals("60", reloaded.getProperty("delay.stop"));
@@ -99,6 +102,7 @@ public class ConfigurationManagerTest {
         
         ConfigurationManager cm = createCmEmptyCli(cs);
         cm.updateConfig(new RsvpConfig(300, 5.0, 4.0, 30, 10));
+        cm.shutdown();
 
         java.util.Properties reloaded = cs.load();
         assertEquals("5.0", reloaded.getProperty("perc.stop"));
@@ -116,6 +120,7 @@ public class ConfigurationManagerTest {
         
         ConfigurationManager cm = createCmEmptyCli(cs);
         cm.updateConfig(new RsvpConfig(500, 0.0, 0.0, 100, 50));
+        cm.shutdown();
 
         java.util.Properties reloaded = cs.load();
         assertEquals("500", reloaded.getProperty("wpm"));
@@ -138,6 +143,7 @@ public class ConfigurationManagerTest {
         // Update WPM interactively to 500
         RsvpConfig cfg = cm.getConfig();
         cm.updateConfig(new RsvpConfig(500, cfg.stopPerc(), cfg.pausePerc(), cfg.stopDelayMs(), cfg.pauseDelayMs()));
+        cm.shutdown();
         
         // WPM was initially set by CLI, so it should NOT be persisted
         java.util.Properties reloaded = cs.load();
@@ -151,5 +157,38 @@ public class ConfigurationManagerTest {
 
         assertTrue(cm.isHelp());
         assertTrue(cm.isInit());
+    }
+
+    @Test
+    void testUpdateConfigIsDebounced() throws Exception {
+        MockConfigService mcs = new MockConfigService(true);
+        ConfigurationManager cm = new ConfigurationManager(mcs, new CliArguments(null, null, null, null, null, false, false, null), new DefaultConfigProvider());
+
+        // Rapid updates
+        RsvpConfig base = cm.getConfig();
+        for (int i = 0; i < 5; i++) {
+            cm.updateConfig(new RsvpConfig(300 + i, base.stopPerc(), base.pausePerc(), base.stopDelayMs(), base.pauseDelayMs()));
+        }
+
+        // Immediately after updates, saveCount should be 0 because it's async and debounced
+        assertEquals(0, mcs.saveCount.get(), "Save should be debounced and not happen immediately");
+
+        // Wait for debounce (scheduled for 500ms in plan)
+        Thread.sleep(800);
+        assertEquals(1, mcs.saveCount.get(), "Multiple updates should be debounced into a single save");
+    }
+
+    @Test
+    void testShutdownFlushesPendingSave() throws Exception {
+        MockConfigService mcs = new MockConfigService(true);
+        ConfigurationManager cm = new ConfigurationManager(mcs, new CliArguments(null, null, null, null, null, false, false, null), new DefaultConfigProvider());
+
+        RsvpConfig base = cm.getConfig();
+        cm.updateConfig(new RsvpConfig(500, base.stopPerc(), base.pausePerc(), base.stopDelayMs(), base.pauseDelayMs()));
+        
+        assertEquals(0, mcs.saveCount.get());
+        
+        cm.shutdown();
+        assertEquals(1, mcs.saveCount.get(), "Shutdown should flush pending save");
     }
 }

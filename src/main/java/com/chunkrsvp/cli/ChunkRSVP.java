@@ -36,6 +36,8 @@ public class ChunkRSVP {
             engine.run(provider, new com.chunkrsvp.cli.input.InputController(tty));
         } catch (Exception e) {
             System.err.println("Error reading tty: " + e.getMessage());
+        } finally {
+            configManager.shutdown();
         }
 
         System.out.println("Reading complete.");
