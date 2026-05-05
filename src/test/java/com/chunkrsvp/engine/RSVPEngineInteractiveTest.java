@@ -2,8 +2,8 @@ package com.chunkrsvp.engine;
 
 import com.chunkrsvp.cli.CliArguments;
 import com.chunkrsvp.model.Chunk;
-import com.chunkrsvp.ui.MockViewManager;
-import com.chunkrsvp.ui.ViewManager;
+import com.chunkrsvp.cli.ui.MockViewManager;
+import com.chunkrsvp.cli.ui.ViewManager;
 import com.chunkrsvp.util.ConfigService;
 import com.chunkrsvp.util.ConfigurationManager;
 import com.chunkrsvp.util.DefaultConfigProvider;

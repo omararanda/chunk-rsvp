@@ -16,7 +16,7 @@ public class ChunkRSVPTest {
         ConfigurationManager cm = new ConfigurationManager(
             new ConfigService(System.getProperty("java.io.tmpdir") + "/test_config.properties"), cli, new DefaultConfigProvider());
         
-        RSVPEngine engine = new RSVPEngine(cm, new com.chunkrsvp.ui.MockViewManager());
+        RSVPEngine engine = new RSVPEngine(cm, new com.chunkrsvp.cli.ui.MockViewManager());
         
         // Single word chunk -> 200ms + 0 = 200ms
         Chunk word = new Chunk("Test");

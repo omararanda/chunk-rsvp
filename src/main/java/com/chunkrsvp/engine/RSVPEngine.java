@@ -1,7 +1,7 @@
 package com.chunkrsvp.engine;
 
 import com.chunkrsvp.model.Chunk;
-import com.chunkrsvp.ui.ViewManager;
+import com.chunkrsvp.cli.ui.ViewManager;
 import com.chunkrsvp.util.ConfigurationManager;
 import com.chunkrsvp.util.RsvpConfig;
 import java.io.*;

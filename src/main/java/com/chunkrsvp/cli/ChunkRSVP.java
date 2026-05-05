@@ -22,7 +22,7 @@ public class ChunkRSVP {
         List<Chunk> chunks = ChunkLoader.load(System.in);
         if (chunks.isEmpty()) { System.err.println("No chunks found."); return; }
 
-        RSVPEngine engine = new RSVPEngine(configManager, new com.chunkrsvp.ui.AnsiTerminalView());
+        RSVPEngine engine = new RSVPEngine(configManager, new com.chunkrsvp.cli.ui.AnsiTerminalView());
 
         try (FileInputStream tty = new FileInputStream("/dev/tty")) {
             engine.run(chunks, tty);
