@@ -13,11 +13,11 @@ public class ConfigurationManagerTest {
     Path tempDir;
 
     private ConfigurationManager createCmEmptyCli(ConfigService cs) {
-        return new ConfigurationManager(cs, new CliArguments(null, null, null, null, null, false, false), new DefaultConfigProvider());
+        return new ConfigurationManager(cs, new CliArguments(null, null, null, null, null, false, false, null), new DefaultConfigProvider());
     }
 
     private ConfigurationManager createCmWithCli(int wpm, double sm, double pm, int sd, int pd, ConfigService cs) {
-        return new ConfigurationManager(cs, new CliArguments(wpm, sm, pm, sd, pd, false, false), new DefaultConfigProvider());
+        return new ConfigurationManager(cs, new CliArguments(wpm, sm, pm, sd, pd, false, false, null), new DefaultConfigProvider());
     }
 
     @Test
@@ -133,7 +133,7 @@ public class ConfigurationManagerTest {
         cs.save(p);
         
         // CLI flag sets WPM to 400 (transient)
-        ConfigurationManager cm = new ConfigurationManager(cs, new CliArguments(400, null, null, null, null, false, false), new DefaultConfigProvider());
+        ConfigurationManager cm = new ConfigurationManager(cs, new CliArguments(400, null, null, null, null, false, false, null), new DefaultConfigProvider());
         
         // Update WPM interactively to 500
         RsvpConfig cfg = cm.getConfig();
@@ -147,7 +147,7 @@ public class ConfigurationManagerTest {
     @Test
     void testInitAndHelpFlags() {
         ConfigService cs = new ConfigService(tempDir.resolve("config.properties").toString());
-        ConfigurationManager cm = new ConfigurationManager(cs, new CliArguments(null, null, null, null, null, true, true), new DefaultConfigProvider());
+        ConfigurationManager cm = new ConfigurationManager(cs, new CliArguments(null, null, null, null, null, true, true, null), new DefaultConfigProvider());
 
         assertTrue(cm.isHelp());
         assertTrue(cm.isInit());

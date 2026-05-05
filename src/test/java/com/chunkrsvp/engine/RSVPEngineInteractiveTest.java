@@ -24,7 +24,7 @@ public class RSVPEngineInteractiveTest {
     }
 
     private ConfigurationManager createCm() {
-        return new ConfigurationManager(configService, new CliArguments(300, 0.0, 0.0, 0, 0, false, false), new DefaultConfigProvider());
+        return new ConfigurationManager(configService, new CliArguments(300, 0.0, 0.0, 0, 0, false, false, null), new DefaultConfigProvider());
     }
 
     @Test

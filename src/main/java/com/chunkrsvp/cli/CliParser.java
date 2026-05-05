@@ -7,6 +7,8 @@ public class CliParser {
         Integer sd = null, pd = null;
         boolean help = false, init = false;
 
+        String filePath = null;
+
         for (String arg : args) {
             if (arg.equals("-h") || arg.equals("--help")) { help = true; }
             else if (arg.equals("--init")) { init = true; }
@@ -15,7 +17,8 @@ public class CliParser {
             else if (arg.startsWith("-pm=") || arg.startsWith("--pause-multiplier=")) { pm = Double.parseDouble(arg.split("=")[1]); }
             else if (arg.startsWith("-sd=") || arg.startsWith("--stop-delay=")) { sd = Integer.parseInt(arg.split("=")[1]); }
             else if (arg.startsWith("-pd=") || arg.startsWith("--pause-delay=")) { pd = Integer.parseInt(arg.split("=")[1]); }
+            else if (!arg.startsWith("-")) { filePath = arg; }
         }
-        return new CliArguments(wpm, sm, pm, sd, pd, help, init);
+        return new CliArguments(wpm, sm, pm, sd, pd, help, init, filePath);
     }
 }
