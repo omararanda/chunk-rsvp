@@ -39,7 +39,7 @@ public class RSVPEngine {
         try {
             if (!provider.hasNext()) return;
             provider.next();
-            view.display(provider.current(), configManager.getConfig().wpm(), isPaused, true, configManager.getConfig().noControls());
+            view.display(provider.current(), configManager.getConfig().wpm(), isPaused, true, !configManager.getConfig().noControls());
             
             boolean running = true;
             while (running) {
@@ -65,17 +65,17 @@ public class RSVPEngine {
                     
                     if (action == InputAction.PAUSE_TOGGLE) {
                         isPaused = !isPaused;
-                        view.display(chunk, configManager.getConfig().wpm(), isPaused, true, configManager.getConfig().noControls());
+                        view.display(chunk, configManager.getConfig().wpm(), isPaused, true, !configManager.getConfig().noControls());
                     } else if (action == InputAction.SPEED_UP) {
                         RsvpConfig c = configManager.getConfig();
                         configManager.updateConfig(new RsvpConfig(c.wpm() + 50, c.stopPerc(), c.pausePerc(), c.stopDelayMs(), c.pauseDelayMs()));
-                        delayNanos = calculateDelay(chunk) * 1_000_000L; remainingDelay = delayNanos; lastLoopTime = System.nanoTime(); view.display(chunk, configManager.getConfig().wpm(), isPaused, true, configManager.getConfig().noControls()); 
+                        delayNanos = calculateDelay(chunk) * 1_000_000L; remainingDelay = delayNanos; lastLoopTime = System.nanoTime(); view.display(chunk, configManager.getConfig().wpm(), isPaused, true, !configManager.getConfig().noControls()); 
                     } else if (action == InputAction.SPEED_DOWN) {
                         RsvpConfig c = configManager.getConfig();
                         configManager.updateConfig(new RsvpConfig(Math.max(50, c.wpm() - 50), c.stopPerc(), c.pausePerc(), c.stopDelayMs(), c.pauseDelayMs()));
-                        delayNanos = calculateDelay(chunk) * 1_000_000L; remainingDelay = delayNanos; lastLoopTime = System.nanoTime(); view.display(chunk, configManager.getConfig().wpm(), isPaused, true, configManager.getConfig().noControls()); 
+                        delayNanos = calculateDelay(chunk) * 1_000_000L; remainingDelay = delayNanos; lastLoopTime = System.nanoTime(); view.display(chunk, configManager.getConfig().wpm(), isPaused, true, !configManager.getConfig().noControls()); 
                     } else if (action == InputAction.REWIND) {
-                        provider.rewind(5); jumped = true; view.display(provider.current(), configManager.getConfig().wpm(), isPaused, true, configManager.getConfig().noControls()); break;
+                        provider.rewind(5); jumped = true; view.display(provider.current(), configManager.getConfig().wpm(), isPaused, true, !configManager.getConfig().noControls()); break;
                     } else if (action == InputAction.EXIT) {
                         view.restore(); return;
                     }
@@ -93,7 +93,7 @@ public class RSVPEngine {
                 if (!jumped) {
                     if (provider.hasNext()) {
                         provider.next();
-                        view.display(provider.current(), configManager.getConfig().wpm(), isPaused, false, configManager.getConfig().noControls());
+                        view.display(provider.current(), configManager.getConfig().wpm(), isPaused, false, !configManager.getConfig().noControls());
                     } else {
                         running = false;
                     }
