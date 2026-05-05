@@ -19,7 +19,15 @@ public class ChunkRSVP {
         if (configManager.isHelp()) { printHelp(); return; }
         if (configManager.isInit()) { initializeConfig(); return; }
 
-        List<Chunk> chunks = ChunkLoader.load(System.in);
+        List<Chunk> chunks;
+        try {
+            java.io.InputStream stream = new com.chunkrsvp.util.InputResolutionService().resolve(cli.getFilePath(), System.in);
+            chunks = ChunkLoader.load(stream);
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
+            return;
+        }
+        
         if (chunks.isEmpty()) { System.err.println("No chunks found."); return; }
 
         RSVPEngine engine = new RSVPEngine(configManager, new com.chunkrsvp.cli.ui.AnsiTerminalView());
