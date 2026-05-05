@@ -2,47 +2,80 @@ package com.chunkrsvp.util;
 
 import com.chunkrsvp.cli.CliArguments;
 import java.util.Properties;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ConfigurationManager {
     private final ConfigService configService;
-    private RsvpConfig config;
+    private final DefaultConfigProvider defaults;
     private final CliArguments cliArgs;
+    private RsvpConfig config;
+    private final Set<String> transientKeys = new HashSet<>();
 
-    public ConfigurationManager(ConfigService configService, CliArguments cliArgs) {
+    public ConfigurationManager(ConfigService configService, CliArguments cliArgs, DefaultConfigProvider defaults) {
         this.configService = configService;
         this.cliArgs = cliArgs;
+        this.defaults = defaults;
         this.config = resolveConfig();
     }
 
     private RsvpConfig resolveConfig() {
         Properties props = configService.load();
         
-        int wpm = cliArgs.getWpm() != null ? cliArgs.getWpm() : Integer.parseInt(props.getProperty("wpm", "300"));
-        double stopPerc = cliArgs.getSm() != null ? cliArgs.getSm() : Double.parseDouble(props.getProperty("perc.stop", "0.0"));
-        double pausePerc = cliArgs.getPm() != null ? cliArgs.getPm() : Double.parseDouble(props.getProperty("perc.pause", "0.0"));
-        int stopDelayMs = cliArgs.getSd() != null ? cliArgs.getSd() : Integer.parseInt(props.getProperty("delay.stop", "30"));
-        int pauseDelayMs = cliArgs.getPd() != null ? cliArgs.getPd() : Integer.parseInt(props.getProperty("delay.pause", "10"));
+        int wpm = resolveValue(cliArgs.getWpm(), props.getProperty("wpm"), defaults.getWpm(), "wpm");
+        double stopPerc = resolveValue(cliArgs.getSm(), props.getProperty("perc.stop"), defaults.getStopPerc(), "perc.stop");
+        double pausePerc = resolveValue(cliArgs.getPm(), props.getProperty("perc.pause"), defaults.getPausePerc(), "perc.pause");
+        int stopDelayMs = resolveValue(cliArgs.getSd(), props.getProperty("delay.stop"), defaults.getStopDelayMs(), "delay.stop");
+        int pauseDelayMs = resolveValue(cliArgs.getPd(), props.getProperty("delay.pause"), defaults.getPauseDelayMs(), "delay.pause");
         
         return new RsvpConfig(wpm, stopPerc, pausePerc, stopDelayMs, pauseDelayMs);
     }
 
-    public RsvpConfig getConfig() {
-        return config;
+    private <T> T resolveValue(T cli, String file, T def, String key) {
+        if (cli != null) {
+            transientKeys.add(key);
+            return cli;
+        }
+        if (file != null) {
+            if (def instanceof Integer) return (T) Integer.valueOf(file);
+            if (def instanceof Double) return (T) Double.valueOf(file);
+            return (T) file;
+        }
+        return def;
     }
 
-    public void updateWpm(int wpm) {
-        config = new RsvpConfig(wpm, config.stopPerc(), config.pausePerc(), config.stopDelayMs(), config.pauseDelayMs());
+    public RsvpConfig getConfig() { return config; }
+
+    public void updateConfig(RsvpConfig newConfig) {
+        this.config = newConfig;
         persist();
     }
 
-    private void persist() {
-        Properties props = new Properties();
-        props.setProperty("wpm", String.valueOf(config.wpm()));
-        props.setProperty("perc.stop", String.valueOf(config.stopPerc()));
-        props.setProperty("perc.pause", String.valueOf(config.pausePerc()));
-        props.setProperty("delay.stop", String.valueOf(config.stopDelayMs()));
-        props.setProperty("delay.pause", String.valueOf(config.pauseDelayMs()));
-        configService.save(props);
+    public void persist() {
+        if (!configService.exists()) return;
+
+        Properties props = configService.load();
+        boolean changed = false;
+        
+        changed |= updateIfPersistent(props, "wpm", String.valueOf(config.wpm()));
+        changed |= updateIfPersistent(props, "perc.stop", String.valueOf(config.stopPerc()));
+        changed |= updateIfPersistent(props, "perc.pause", String.valueOf(config.pausePerc()));
+        changed |= updateIfPersistent(props, "delay.stop", String.valueOf(config.stopDelayMs()));
+        changed |= updateIfPersistent(props, "delay.pause", String.valueOf(config.pauseDelayMs()));
+        
+        if (changed) {
+            configService.save(props);
+        }
+    }
+
+    private boolean updateIfPersistent(Properties props, String key, String value) {
+        if (!transientKeys.contains(key) && props.containsKey(key)) {
+            if (!value.equals(props.getProperty(key))) {
+                props.setProperty(key, value);
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean isHelp() { return cliArgs.isHelp(); }

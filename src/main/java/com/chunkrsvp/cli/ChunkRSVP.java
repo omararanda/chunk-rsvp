@@ -12,7 +12,8 @@ public class ChunkRSVP {
         CliArguments cli = CliParser.parse(args);
         ConfigurationManager configManager = new ConfigurationManager(
             new ConfigService(System.getProperty("user.home") + "/.config/chunk-rsvp/config.properties"),
-            cli
+            cli,
+            new com.chunkrsvp.util.DefaultConfigProvider()
         );
 
         if (configManager.isHelp()) { printHelp(); return; }

@@ -10,6 +10,10 @@ public class ConfigService {
         this.configFile = new File(path);
     }
 
+    public boolean exists() {
+        return configFile.exists();
+    }
+
     public Properties load() {
         Properties props = new Properties();
         if (configFile.exists()) {
