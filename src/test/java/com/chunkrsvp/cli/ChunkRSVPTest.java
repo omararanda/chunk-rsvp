@@ -12,7 +12,7 @@ public class ChunkRSVPTest {
 
     @Test
     public void testDelayCalculation() {
-        CliArguments cli = new CliArguments(300, 2.0, 1.5, 50, 20, false, false);
+        CliArguments cli = new CliArguments(300, 2.0, 1.5, 50, 20, false, false, null);
         ConfigurationManager cm = new ConfigurationManager(
             new ConfigService(System.getProperty("java.io.tmpdir") + "/test_config.properties"), cli, new DefaultConfigProvider());
         

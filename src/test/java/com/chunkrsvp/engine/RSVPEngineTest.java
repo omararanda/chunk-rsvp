@@ -23,7 +23,7 @@ public class RSVPEngineTest {
     }
 
     private ConfigurationManager createCm(int wpm, double sm, double pm, int sd, int pd) {
-        return new ConfigurationManager(configService, new CliArguments(wpm, sm, pm, sd, pd, false, false), new DefaultConfigProvider());
+        return new ConfigurationManager(configService, new CliArguments(wpm, sm, pm, sd, pd, false, false, null), new DefaultConfigProvider());
     }
 
     @Test
