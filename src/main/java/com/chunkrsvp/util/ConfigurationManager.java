@@ -55,14 +55,27 @@ public class ConfigurationManager {
         if (!configService.exists()) return;
 
         Properties props = configService.load();
+        boolean changed = false;
         
-        props.setProperty("wpm", String.valueOf(config.wpm()));
-        props.setProperty("perc.stop", String.valueOf(config.stopPerc()));
-        props.setProperty("perc.pause", String.valueOf(config.pausePerc()));
-        props.setProperty("delay.stop", String.valueOf(config.stopDelayMs()));
-        props.setProperty("delay.pause", String.valueOf(config.pauseDelayMs()));
+        changed |= updateIfPersistent(props, "wpm", String.valueOf(config.wpm()));
+        changed |= updateIfPersistent(props, "perc.stop", String.valueOf(config.stopPerc()));
+        changed |= updateIfPersistent(props, "perc.pause", String.valueOf(config.pausePerc()));
+        changed |= updateIfPersistent(props, "delay.stop", String.valueOf(config.stopDelayMs()));
+        changed |= updateIfPersistent(props, "delay.pause", String.valueOf(config.pauseDelayMs()));
         
-        configService.save(props);
+        if (changed) {
+            configService.save(props);
+        }
+    }
+
+    private boolean updateIfPersistent(Properties props, String key, String value) {
+        if (!transientKeys.contains(key) && props.containsKey(key)) {
+            if (!value.equals(props.getProperty(key))) {
+                props.setProperty(key, value);
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean isHelp() { return cliArgs.isHelp(); }
