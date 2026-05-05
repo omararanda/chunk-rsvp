@@ -3,24 +3,26 @@ package com.chunkrsvp.cli;
 import com.chunkrsvp.engine.RSVPEngine;
 import com.chunkrsvp.model.Chunk;
 import com.chunkrsvp.util.ConfigService;
+import com.chunkrsvp.util.ConfigurationManager;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ChunkRSVP {
     public static void main(String[] args) {
         CliArguments cli = CliParser.parse(args);
-        if (cli.isHelp()) { printHelp(); return; }
-        if (cli.isInit()) { initializeConfig(); return; }
+        ConfigurationManager configManager = new ConfigurationManager(
+            new ConfigService(System.getProperty("user.home") + "/.config/chunk-rsvp/config.properties"),
+            cli
+        );
+
+        if (configManager.isHelp()) { printHelp(); return; }
+        if (configManager.isInit()) { initializeConfig(); return; }
 
         List<Chunk> chunks = ChunkLoader.load(System.in);
         if (chunks.isEmpty()) { System.err.println("No chunks found."); return; }
-        
-        ConfigService cs = new ConfigService(System.getProperty("user.home") + "/.config/chunk-rsvp/config.properties");
-        RSVPEngine engine = new RSVPEngine(cli.getWpm() != null ? cli.getWpm() : 300, cli.getSm(), cli.getPm(), cli.getSd(), cli.getPd(), cs);
-        
+
+        RSVPEngine engine = new RSVPEngine(configManager);
+
         try (FileInputStream tty = new FileInputStream("/dev/tty")) {
             engine.run(chunks, tty);
         } catch (Exception e) {
@@ -56,3 +58,4 @@ public class ChunkRSVP {
         try { dir.mkdirs(); try (PrintWriter out = new PrintWriter(configFile)) { out.println("wpm=300\ndelay.stop=50\ndelay.pause=20"); } System.out.println("Initialized: " + configFile.getAbsolutePath()); } catch (Exception e) { System.err.println("Error: " + e.getMessage()); }
     }
 }
+

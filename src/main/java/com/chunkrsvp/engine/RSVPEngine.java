@@ -1,63 +1,30 @@
 package com.chunkrsvp.engine;
 
 import com.chunkrsvp.model.Chunk;
-import com.chunkrsvp.util.ConfigService;
+import com.chunkrsvp.util.ConfigurationManager;
+import com.chunkrsvp.util.RsvpConfig;
 import java.io.*;
 import java.util.List;
-import java.util.Properties;
 
 public class RSVPEngine {
-    private int baseWpm;
-    private double stopPerc = 0.0;
-    private double pausePerc = 0.0;
-    private int stopDelayMs = 30;
-    private int pauseDelayMs = 10;
+    private final ConfigurationManager configManager;
     private static final int MS_IN_MINUTE = 60000;
-    private final ConfigService configService;
 
-    public RSVPEngine(int baseWpm, Double cliStopPerc, Double cliPausePerc, Integer cliStopAdd, Integer cliPauseAdd, ConfigService configService) {
-        this.baseWpm = baseWpm;
-        this.configService = configService;
-        loadConfig();
-        if (cliStopPerc != null) this.stopPerc = cliStopPerc;
-        if (cliPausePerc != null) this.pausePerc = cliPausePerc;
-        if (cliStopAdd != null) this.stopDelayMs = cliStopAdd;
-        if (cliPauseAdd != null) this.pauseDelayMs = cliPauseAdd;
-    }
-
-    private void loadConfig() {
-        Properties props = configService.load();
-        stopPerc = Double.parseDouble(props.getProperty("perc.stop", String.valueOf(stopPerc)));
-        pausePerc = Double.parseDouble(props.getProperty("perc.pause", String.valueOf(pausePerc)));
-        stopDelayMs = Integer.parseInt(props.getProperty("delay.stop", String.valueOf(stopDelayMs)));
-        pauseDelayMs = Integer.parseInt(props.getProperty("delay.pause", String.valueOf(pauseDelayMs)));
-        baseWpm = Integer.parseInt(props.getProperty("wpm", String.valueOf(baseWpm)));
-    }
-
-    private void saveConfig() {
-        Properties props = new Properties();
-        props.setProperty("perc.stop", String.valueOf(stopPerc));
-        props.setProperty("perc.pause", String.valueOf(pausePerc));
-        props.setProperty("delay.stop", String.valueOf(stopDelayMs));
-        props.setProperty("delay.pause", String.valueOf(pauseDelayMs));
-        props.setProperty("wpm", String.valueOf(baseWpm));
-        configService.save(props);
-    }
-
-    public int getBaseWpm() {
-        return baseWpm;
+    public RSVPEngine(ConfigurationManager configManager) {
+        this.configManager = configManager;
     }
 
     public long calculateDelay(Chunk chunk) {
+        RsvpConfig cfg = configManager.getConfig();
         String text = chunk.getText();
-        long baseDelay = (long) (chunk.getWordCount() * ((double) MS_IN_MINUTE / baseWpm));
+        long baseDelay = (long) (chunk.getWordCount() * ((double) MS_IN_MINUTE / cfg.wpm()));
         long stopCount = text.chars().filter(ch -> ch == '.' || ch == '?' || ch == '!').count();
         long pauseCount = text.chars().filter(ch -> ch == ',' || ch == ';' || ch == ':').count();
         long totalDelay = baseDelay;
-        if (stopDelayMs > 0) totalDelay += (stopCount * stopDelayMs);
-        else if (stopPerc > 0) totalDelay += (long) (baseDelay * (stopPerc / 100.0) * stopCount);
-        if (pauseDelayMs > 0) totalDelay += (pauseCount * pauseDelayMs);
-        else if (pausePerc > 0) totalDelay += (long) (baseDelay * (pausePerc / 100.0) * pauseCount);
+        if (cfg.stopDelayMs() > 0) totalDelay += (stopCount * cfg.stopDelayMs());
+        else if (cfg.stopPerc() > 0) totalDelay += (long) (baseDelay * (cfg.stopPerc() / 100.0) * stopCount);
+        if (cfg.pauseDelayMs() > 0) totalDelay += (pauseCount * cfg.pauseDelayMs());
+        else if (cfg.pausePerc() > 0) totalDelay += (long) (baseDelay * (cfg.pausePerc() / 100.0) * pauseCount);
         return totalDelay;
     }
 
@@ -93,8 +60,14 @@ public class RSVPEngine {
                             Thread.sleep(5);
                             if (ttyInput.available() > 0 && ttyInput.read() == '[') {
                                 int dir = ttyInput.read();
-                                if (dir == 'A') { baseWpm += 50; saveConfig(); delay = calculateDelay(chunk); remainingDelay = delay; lastLoopTime = System.currentTimeMillis(); displayChunk(chunk, true); }
-                                else if (dir == 'B') { baseWpm = Math.max(50, baseWpm - 50); saveConfig(); delay = calculateDelay(chunk); remainingDelay = delay; lastLoopTime = System.currentTimeMillis(); displayChunk(chunk, true); }
+                                if (dir == 'A') { 
+                                    configManager.updateWpm(configManager.getConfig().wpm() + 50);
+                                    delay = calculateDelay(chunk); remainingDelay = delay; lastLoopTime = System.currentTimeMillis(); displayChunk(chunk, true); 
+                                }
+                                else if (dir == 'B') { 
+                                    configManager.updateWpm(Math.max(50, configManager.getConfig().wpm() - 50));
+                                    delay = calculateDelay(chunk); remainingDelay = delay; lastLoopTime = System.currentTimeMillis(); displayChunk(chunk, true); 
+                                }
                                 else if (dir == 'D') { i = Math.max(0, i - 5); jumped = true; displayChunk(chunks.get(i), true); break; }
                             }
                         } else if (b == 3) { restoreTerminal(); return; }
@@ -108,18 +81,19 @@ public class RSVPEngine {
 
     private int lastDisplayedWpm = -1;
     private void displayHeader(boolean force) {
-        if (baseWpm != lastDisplayedWpm || force) {
+        int currentWpm = configManager.getConfig().wpm();
+        if (currentWpm != lastDisplayedWpm || force) {
             System.out.print("\033[H");
             System.out.print("\033[1G\033[KControls: [↑] +50 WPM | [↓] -50 WPM | [←] Back 5 chunks | [SPACE] Pause/Resume\n");
             System.out.print("\033[1G\033[K\n");
             System.out.print("\033[1G\033[K");
             if (isPaused) {
-                System.out.printf("Speed: [PAUSED] %d WPM", baseWpm);
+                System.out.printf("Speed: [PAUSED] %d WPM", currentWpm);
             } else {
-                System.out.printf("Speed: %d WPM", baseWpm);
+                System.out.printf("Speed: %d WPM", currentWpm);
             }
             System.out.print("\033[K\n"); 
-            lastDisplayedWpm = baseWpm;
+            lastDisplayedWpm = currentWpm;
         }
     }
     private void displayChunk(Chunk chunk, boolean forceHeader) {
