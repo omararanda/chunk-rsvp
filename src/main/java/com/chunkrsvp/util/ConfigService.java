@@ -1,4 +1,4 @@
-package com.rsvp.util;
+package com.chunkrsvp.util;
 
 import java.io.*;
 import java.util.Properties;

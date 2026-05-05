@@ -1,7 +1,7 @@
-package com.rsvp.engine;
+package com.chunkrsvp.engine;
 
-import com.rsvp.model.Chunk;
-import com.rsvp.util.ConfigService;
+import com.chunkrsvp.model.Chunk;
+import com.chunkrsvp.util.ConfigService;
 import java.io.*;
 import java.util.List;
 import java.util.Properties;

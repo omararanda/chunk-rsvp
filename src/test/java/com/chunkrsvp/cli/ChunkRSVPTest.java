@@ -1,13 +1,13 @@
-package com.rsvp;
+package com.chunkrsvp.cli;
 
-import com.rsvp.engine.RSVPEngine;
-import com.rsvp.model.Chunk;
-import com.rsvp.util.ConfigService;
+import com.chunkrsvp.engine.RSVPEngine;
+import com.chunkrsvp.model.Chunk;
+import com.chunkrsvp.util.ConfigService;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.File;
 
-public class AppTest {
+public class ChunkRSVPTest {
 
     @Test
     public void testDelayCalculation() {

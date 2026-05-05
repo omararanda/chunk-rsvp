@@ -1,4 +1,4 @@
-package com.rsvp.util;
+package com.chunkrsvp.util;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

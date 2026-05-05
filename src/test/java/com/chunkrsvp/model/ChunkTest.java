@@ -1,4 +1,4 @@
-package com.rsvp.model;
+package com.chunkrsvp.model;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
