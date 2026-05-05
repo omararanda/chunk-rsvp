@@ -54,7 +54,8 @@ public class ChunkRSVP {
             "  -sm, --stop-multiplier=PERCENT      Stop punctuation increase (percentage of chunk time)\n" +
             "  -pm, --pause-multiplier=PERCENT     Pause punctuation increase (percentage of chunk time)\n" +
             "  -sd, --stop-delay=MS                Stop punctuation delay in ms\n" +
-            "  -pd, --pause-delay=MS               Pause punctuation delay in ms\n\n" +
+            "  -pd, --pause-delay=MS               Pause punctuation delay in ms\n" +
+            "  --no-controls                       Disable UI control hints and interactive inputs\n\n" +
             "Precedence: Millisecond delays (--stop-delay, --pause-delay) take priority over percentage multipliers.\n\n" +
             "Configuration File:\n" +
             "  Location: ~/.config/chunk-rsvp/config.properties\n" +

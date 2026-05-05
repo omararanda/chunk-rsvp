@@ -26,4 +26,11 @@ public class CliParserTest {
         CliArguments cli = CliParser.parse(args);
         assertTrue(cli.isNoControls(), "--no-controls flag should be recognized");
     }
+
+    @Test
+    void testNoControlsDefaultIsFalse() {
+        String[] args = {};
+        CliArguments cli = CliParser.parse(args);
+        assertFalse(cli.isNoControls(), "noControls should be false by default");
+    }
 }
