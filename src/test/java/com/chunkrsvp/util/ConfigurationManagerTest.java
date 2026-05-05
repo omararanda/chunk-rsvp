@@ -160,6 +160,15 @@ public class ConfigurationManagerTest {
     }
 
     @Test
+    void testNoControlsConfig() {
+        ConfigService cs = new ConfigService(tempDir.resolve("config.properties").toString());
+        CliArguments cli = new CliArguments(null, null, null, null, null, false, false, null, true);
+        ConfigurationManager cm = new ConfigurationManager(cs, cli, new DefaultConfigProvider());
+        
+        assertTrue(cm.getConfig().noControls(), "noControls flag should be propagated to RsvpConfig");
+    }
+
+    @Test
     void testUpdateConfigIsDebounced() throws Exception {
         MockConfigService mcs = new MockConfigService(true);
         ConfigurationManager cm = new ConfigurationManager(mcs, new CliArguments(null, null, null, null, null, false, false, null), new DefaultConfigProvider());
