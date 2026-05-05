@@ -110,4 +110,23 @@ public class RSVPEngineInteractiveTest {
         engineThread.join(2000);
         assertFalse(engineThread.isAlive(), "Engine thread should have finished");
     }
+
+    @Test
+    void testNoControlsIgnoresPause() throws Exception {
+        ConfigurationManager cm = new ConfigurationManager(new ConfigService(tmpConfig), 
+            new CliArguments(300, null, null, null, null, false, false, null, true), 
+            new DefaultConfigProvider());
+        com.chunkrsvp.cli.ui.MockViewManager mockView = new com.chunkrsvp.cli.ui.MockViewManager();
+        RSVPEngine engine = new RSVPEngine(cm, mockView);
+
+        // Mock input for PAUSE_TOGGLE (Space: 32)
+        byte[] input = {32, 3}; 
+        com.chunkrsvp.cli.input.InputController ic = new com.chunkrsvp.cli.input.InputController(new ByteArrayInputStream(input));
+        
+        com.chunkrsvp.model.ChunkProvider provider = new com.chunkrsvp.model.ListChunkProvider(java.util.List.of(new Chunk("test")));
+        
+        engine.run(provider, ic);
+        
+        assertFalse(mockView.lastPaused, "Engine should NOT have paused in no-controls mode");
+    }
 }

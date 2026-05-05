@@ -59,6 +59,10 @@ public class RSVPEngine {
                     }
 
                     InputAction action = input.checkInput();
+                    if (configManager.getConfig().noControls() && action != InputAction.EXIT && action != InputAction.NONE) {
+                        action = InputAction.NONE;
+                    }
+                    
                     if (action == InputAction.PAUSE_TOGGLE) {
                         isPaused = !isPaused;
                         view.display(chunk, configManager.getConfig().wpm(), isPaused, true, configManager.getConfig().noControls());
