@@ -16,12 +16,23 @@ public class InputController {
             if (b == 32) return InputAction.PAUSE_TOGGLE;
             if (b == 3) return InputAction.EXIT;
             if (b == 27) {
-                Thread.sleep(5);
-                if (inputStream.available() > 0 && inputStream.read() == '[') {
+                // Peek ahead: read the '[' and then the directional char
+                // This is a blocking read, but we checked available() >= 2 for the sequence
+                // to be considered a full command.
+                // Wait... if available() is 1 (the ESC), we should wait for the rest.
+                long startTime = System.currentTimeMillis();
+                while (inputStream.available() < 2 && (System.currentTimeMillis() - startTime) < 50) {
+                    Thread.sleep(5);
+                }
+                
+                if (inputStream.available() >= 2) {
+                    int bracket = inputStream.read();
                     int dir = inputStream.read();
-                    if (dir == 'A') return InputAction.SPEED_UP;
-                    if (dir == 'B') return InputAction.SPEED_DOWN;
-                    if (dir == 'D') return InputAction.REWIND;
+                    if (bracket == '[') {
+                        if (dir == 'A') return InputAction.SPEED_UP;
+                        if (dir == 'B') return InputAction.SPEED_DOWN;
+                        if (dir == 'D') return InputAction.REWIND;
+                    }
                 }
             }
         }
