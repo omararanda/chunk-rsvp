@@ -16,10 +16,14 @@ public class AnsiTerminalView implements ViewManager {
     }
 
     @Override
-    public void display(Chunk chunk, int wpm, boolean isPaused, boolean forceHeader) {
+    public void display(Chunk chunk, int wpm, boolean isPaused, boolean forceHeader, boolean showControls) {
         if (wpm != lastDisplayedWpm || forceHeader) {
             System.out.print("\033[H");
-            System.out.print("\033[1G\033[KControls: [↑] +50 WPM | [↓] -50 WPM | [←] Back 5 chunks | [SPACE] Pause/Resume\n");
+            if (showControls) {
+                System.out.print("\033[1G\033[KControls: [↑] +50 WPM | [↓] -50 WPM | [←] Back 5 chunks | [SPACE] Pause/Resume\n");
+            } else {
+                System.out.print("\033[1G\033[K\n");
+            }
             System.out.print("\033[1G\033[K\n");
             System.out.print("\033[1G\033[K");
             if (isPaused) {
