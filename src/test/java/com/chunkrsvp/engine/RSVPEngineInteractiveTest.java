@@ -2,8 +2,11 @@ package com.chunkrsvp.engine;
 
 import com.chunkrsvp.cli.CliArguments;
 import com.chunkrsvp.model.Chunk;
+import com.chunkrsvp.cli.ui.MockViewManager;
+import com.chunkrsvp.cli.ui.ViewManager;
 import com.chunkrsvp.util.ConfigService;
 import com.chunkrsvp.util.ConfigurationManager;
+import com.chunkrsvp.util.DefaultConfigProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.io.*;
@@ -21,13 +24,14 @@ public class RSVPEngineInteractiveTest {
     }
 
     private ConfigurationManager createCm() {
-        return new ConfigurationManager(configService, new CliArguments(300, 0.0, 0.0, 0, 0, false, false));
+        return new ConfigurationManager(configService, new CliArguments(300, 0.0, 0.0, 0, 0, false, false), new DefaultConfigProvider());
     }
 
     @Test
     void testRunLoop_WpmAdjustment() throws Exception {
         ConfigurationManager cm = createCm();
-        RSVPEngine engine = new RSVPEngine(cm);
+        MockViewManager mockView = new MockViewManager();
+        RSVPEngine engine = new RSVPEngine(cm, mockView);
         List<Chunk> chunks = List.of(new Chunk("test"));
 
         // Simulate Up Arrow key (ESC, '[', 'A')
@@ -36,11 +40,13 @@ public class RSVPEngineInteractiveTest {
         
         engine.run(chunks, is);
         assertEquals(350, cm.getConfig().wpm());
+        assertTrue(mockView.setupCalls >= 1);
+        assertTrue(mockView.restoreCalls >= 1);
     }
 
     @Test
     void testRSVPEngine_MissingTTY() {
-        RSVPEngine engine = new RSVPEngine(createCm());
+        RSVPEngine engine = new RSVPEngine(createCm(), new MockViewManager());
         List<Chunk> chunks = List.of(new Chunk("test"));
         
         ByteArrayInputStream closedStream = new ByteArrayInputStream(new byte[0]);
@@ -51,54 +57,35 @@ public class RSVPEngineInteractiveTest {
 
     @Test
     void testPlayPauseTogglesStateAndUI() throws Exception {
-        RSVPEngine engine = new RSVPEngine(createCm());
+        MockViewManager mockView = new MockViewManager();
+        RSVPEngine engine = new RSVPEngine(createCm(), mockView);
         List<Chunk> chunks = List.of(new Chunk("test"));
 
         byte[] input = {32, 3}; 
         InputStream is = new ByteArrayInputStream(input);
         
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        PrintStream ps = new PrintStream(out);
-        PrintStream originalOut = System.out;
-        System.setOut(ps);
-        
-        try {
-            engine.run(chunks, is);
-            String output = out.toString();
-            assertTrue(output.contains("[PAUSED]"), "Output should contain [PAUSED] indicator");
-        } finally {
-            System.setOut(originalOut);
-        }
+        engine.run(chunks, is);
+        assertTrue(mockView.lastPaused, "Engine should have toggled pause state");
     }
 
     @Test
     void testPlayPauseResumesCorrectly() throws Exception {
-        RSVPEngine engine = new RSVPEngine(createCm());
+        MockViewManager mockView = new MockViewManager();
+        RSVPEngine engine = new RSVPEngine(createCm(), mockView);
         List<Chunk> chunks = List.of(new Chunk("test"));
 
         // Space (32), Space (32), Ctrl+C (3)
         byte[] input = {32, 32, 3}; 
         InputStream is = new ByteArrayInputStream(input);
         
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        PrintStream ps = new PrintStream(out);
-        PrintStream originalOut = System.out;
-        System.setOut(ps);
-        
-        try {
-            engine.run(chunks, is);
-            String output = out.toString();
-            // Should show [PAUSED] and then revert to regular speed string
-            assertTrue(output.contains("[PAUSED]"));
-            assertTrue(output.contains("Speed: 300 WPM"));
-        } finally {
-            System.setOut(originalOut);
-        }
+        engine.run(chunks, is);
+        assertFalse(mockView.lastPaused);
     }
 
     @Test
     void testEngineHaltsProgressionWhenPaused() throws Exception {
-        RSVPEngine engine = new RSVPEngine(createCm());
+        MockViewManager mockView = new MockViewManager();
+        RSVPEngine engine = new RSVPEngine(createCm(), mockView);
         List<Chunk> chunks = List.of(new Chunk("test1"), new Chunk("test2"));
 
         // Space (32), Space (32), Ctrl+C (3)

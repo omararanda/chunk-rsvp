@@ -15,3 +15,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Standardized project artifact and entry point names to `ChunkRSVP`.
 - Improved test/production code alignment.
 - Decoupled configuration management into a unified `ConfigurationManager` service [RSVP-010].
+- Extracted UI/Terminal management into `ViewManager` and `AnsiTerminalView` [RSVP-011].
