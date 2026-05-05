@@ -33,8 +33,9 @@ public class ConfigurationManager {
         double pausePerc = resolveValue(cliArgs.getPm(), props.getProperty("perc.pause"), defaults.getPausePerc(), "perc.pause");
         int stopDelayMs = resolveValue(cliArgs.getSd(), props.getProperty("delay.stop"), defaults.getStopDelayMs(), "delay.stop");
         int pauseDelayMs = resolveValue(cliArgs.getPd(), props.getProperty("delay.pause"), defaults.getPauseDelayMs(), "delay.pause");
+        boolean noControls = cliArgs.isNoControls();
         
-        return new RsvpConfig(wpm, stopPerc, pausePerc, stopDelayMs, pauseDelayMs);
+        return new RsvpConfig(wpm, stopPerc, pausePerc, stopDelayMs, pauseDelayMs, noControls);
     }
 
     private <T> T resolveValue(T cli, String file, T def, String key) {

@@ -16,7 +16,7 @@ public class MockViewManager implements ViewManager {
     public void restore() { restoreCalls++; }
 
     @Override
-    public void display(Chunk chunk, int wpm, boolean isPaused, boolean forceHeader) {
+    public void display(Chunk chunk, int wpm, boolean isPaused, boolean forceHeader, boolean showControls) {
         displayCalls++;
         lastWpm = wpm;
         lastPaused = isPaused;

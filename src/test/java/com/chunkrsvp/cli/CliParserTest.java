@@ -19,4 +19,11 @@ public class CliParserTest {
         assertNull(cli.getFilePath());
         assertEquals(400, cli.getWpm());
     }
+
+    @Test
+    void testNoControlsFlag() {
+        String[] args = {"--no-controls"};
+        CliArguments cli = CliParser.parse(args);
+        assertTrue(cli.isNoControls(), "--no-controls flag should be recognized");
+    }
 }

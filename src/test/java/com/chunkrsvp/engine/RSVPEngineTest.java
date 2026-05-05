@@ -75,4 +75,27 @@ public class RSVPEngineTest {
         RSVPEngine fastEngine = new RSVPEngine(createCm(100000, 0.0, 0.0, 0, 0), mockView);
         assertEquals(0, fastEngine.calculateDelay(new Chunk("word")));
     }
+
+    @Test
+    void testNoControlsIgnoresInput() throws Exception {
+        ConfigurationManager cm = new ConfigurationManager(configService, 
+            new CliArguments(300, null, null, null, null, false, false, null, true), 
+            new DefaultConfigProvider());
+        RSVPEngine engine = new RSVPEngine(cm, mockView);
+        
+        // Mock input for SPEED_UP (Arrow Up: ESC [ A)
+        java.io.InputStream bais = new java.io.ByteArrayInputStream(new byte[]{27, '[', 'A'});
+        com.chunkrsvp.cli.input.InputController ic = new com.chunkrsvp.cli.input.InputController(bais);
+        
+        com.chunkrsvp.model.ChunkProvider provider = new com.chunkrsvp.model.ListChunkProvider(java.util.List.of(new Chunk("test")));
+        
+        // We run in a separate thread because run() is blocking, 
+        // or we just check if calculateDelay changes after one loop.
+        // Actually, run() will process the chunk and wait.
+        // Since we only have one chunk, it will finish quickly.
+        
+        engine.run(provider, ic);
+        
+        assertEquals(300, cm.getConfig().wpm(), "WPM should NOT have changed in no-controls mode");
+    }
 }
