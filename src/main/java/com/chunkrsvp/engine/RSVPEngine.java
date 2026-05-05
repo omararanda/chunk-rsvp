@@ -1,6 +1,7 @@
 package com.chunkrsvp.engine;
 
 import com.chunkrsvp.model.Chunk;
+import com.chunkrsvp.ui.ViewManager;
 import com.chunkrsvp.util.ConfigurationManager;
 import com.chunkrsvp.util.RsvpConfig;
 import java.io.*;
@@ -8,10 +9,12 @@ import java.util.List;
 
 public class RSVPEngine {
     private final ConfigurationManager configManager;
+    private final ViewManager view;
     private static final int MS_IN_MINUTE = 60000;
 
-    public RSVPEngine(ConfigurationManager configManager) {
+    public RSVPEngine(ConfigurationManager configManager, ViewManager view) {
         this.configManager = configManager;
+        this.view = view;
     }
 
     public long calculateDelay(Chunk chunk) {
@@ -31,10 +34,10 @@ public class RSVPEngine {
     private boolean isPaused = false;
 
     public void run(List<Chunk> chunks, InputStream ttyInput) {
-        setupTerminal();
+        view.setup();
         try {
             int i = 0;
-            displayChunk(chunks.get(0), true);
+            view.display(chunks.get(0), configManager.getConfig().wpm(), isPaused, true);
             while (i < chunks.size()) {
                 Chunk chunk = chunks.get(i);
                 long delay = calculateDelay(chunk);
@@ -55,7 +58,7 @@ public class RSVPEngine {
                         int b = ttyInput.read();
                         if (b == 32) { // Space
                             isPaused = !isPaused;
-                            displayChunk(chunk, true);
+                            view.display(chunk, configManager.getConfig().wpm(), isPaused, true);
                         } else if (b == 27) {
                             Thread.sleep(5);
                             if (ttyInput.available() > 0 && ttyInput.read() == '[') {
@@ -63,51 +66,21 @@ public class RSVPEngine {
                                 if (dir == 'A') { 
                                     RsvpConfig c = configManager.getConfig();
                                     configManager.updateConfig(new RsvpConfig(c.wpm() + 50, c.stopPerc(), c.pausePerc(), c.stopDelayMs(), c.pauseDelayMs()));
-                                    delay = calculateDelay(chunk); remainingDelay = delay; lastLoopTime = System.currentTimeMillis(); displayChunk(chunk, true); 
+                                    delay = calculateDelay(chunk); remainingDelay = delay; lastLoopTime = System.currentTimeMillis(); view.display(chunk, configManager.getConfig().wpm(), isPaused, true); 
                                 }
                                 else if (dir == 'B') { 
                                     RsvpConfig c = configManager.getConfig();
                                     configManager.updateConfig(new RsvpConfig(Math.max(50, c.wpm() - 50), c.stopPerc(), c.pausePerc(), c.stopDelayMs(), c.pauseDelayMs()));
-                                    delay = calculateDelay(chunk); remainingDelay = delay; lastLoopTime = System.currentTimeMillis(); displayChunk(chunk, true); 
+                                    delay = calculateDelay(chunk); remainingDelay = delay; lastLoopTime = System.currentTimeMillis(); view.display(chunk, configManager.getConfig().wpm(), isPaused, true); 
                                 }
-                                else if (dir == 'D') { i = Math.max(0, i - 5); jumped = true; displayChunk(chunks.get(i), true); break; }
+                                else if (dir == 'D') { i = Math.max(0, i - 5); jumped = true; view.display(chunks.get(i), configManager.getConfig().wpm(), isPaused, true); break; }
                             }
-                        } else if (b == 3) { restoreTerminal(); return; }
+                        } else if (b == 3) { view.restore(); return; }
                     }
                     Thread.sleep(10);
                 }
-                if (!jumped) { i++; if (i < chunks.size()) displayChunk(chunks.get(i), false); }
+                if (!jumped) { i++; if (i < chunks.size()) view.display(chunks.get(i), configManager.getConfig().wpm(), isPaused, false); }
             }
-        } catch (Exception e) { System.err.println("Error: " + e.getMessage()); Thread.currentThread().interrupt(); } finally { restoreTerminal(); }
-    }
-
-    private int lastDisplayedWpm = -1;
-    private void displayHeader(boolean force) {
-        int currentWpm = configManager.getConfig().wpm();
-        if (currentWpm != lastDisplayedWpm || force) {
-            System.out.print("\033[H");
-            System.out.print("\033[1G\033[KControls: [↑] +50 WPM | [↓] -50 WPM | [←] Back 5 chunks | [SPACE] Pause/Resume\n");
-            System.out.print("\033[1G\033[K\n");
-            System.out.print("\033[1G\033[K");
-            if (isPaused) {
-                System.out.printf("Speed: [PAUSED] %d WPM", currentWpm);
-            } else {
-                System.out.printf("Speed: %d WPM", currentWpm);
-            }
-            System.out.print("\033[K\n"); 
-            lastDisplayedWpm = currentWpm;
-        }
-    }
-    private void displayChunk(Chunk chunk, boolean forceHeader) {
-        displayHeader(forceHeader);
-        System.out.print("\033[4;1H\033[J");
-        System.out.print("\033[1G\n\n          " + chunk.getText() + "\n\n\n");
-        System.out.flush();
-    }
-    private void setupTerminal() {
-        try { Runtime.getRuntime().exec(new String[]{"/bin/sh", "-c", "stty raw -echo < /dev/tty && echo -n '\033[?25l' > /dev/tty"}).waitFor(); } catch (Exception e) {}
-    }
-    private void restoreTerminal() {
-        try { System.out.print("\n\r"); System.out.flush(); Runtime.getRuntime().exec(new String[]{"/bin/sh", "-c", "stty sane < /dev/tty && echo -n '\033[?25h' > /dev/tty"}).waitFor(); } catch (Exception e) {}
+        } catch (Exception e) { System.err.println("Error: " + e.getMessage()); Thread.currentThread().interrupt(); } finally { view.restore(); }
     }
 }
